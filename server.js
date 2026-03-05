@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 
 // ==========================================
 // 친구분의 마인크래프트 서버 주소와 포트를 입력하세요.
-const SERVER_IP = '122.44.112.18'; // 예: mc.example.com
+const SERVER_IP = '서버주소'; // 예: mc.example.com
 const SERVER_PORT = 25565; // 마크 기본 포트는 보통 25565 입니다.
 // ==========================================
 
@@ -37,4 +37,5 @@ app.get('/', (req, res) => {
 // 웹 서버 실행
 app.listen(PORT, () => {
     console.log(`웹 서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
+
 });
