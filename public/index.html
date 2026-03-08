@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>마인크래프트 서버 상태</title>
+    <title>떡잎마을 서버 체크</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
         body {
@@ -11,18 +11,19 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            background-color: #1e1f22; /* 디스코드와 비슷한 다크 테마 배경 */
+            background-color: #1e1f22;
             color: #dbdee1;
         }
         .container {
             text-align: center;
-            padding: 50px;
+            padding: 40px;
             border-radius: 16px;
             background-color: #2b2d31;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            min-width: 300px;
+            min-width: 320px;
+            max-width: 500px;
         }
         h1 {
             margin-top: 0;
@@ -34,41 +35,99 @@
             font-weight: 700;
             padding: 20px;
             border-radius: 12px;
-            margin: 30px 0;
+            margin: 20px 0;
             transition: all 0.3s ease;
         }
         .online {
-            color: #23a559; /* 초록색 */
+            color: #23a559; 
             background-color: rgba(35, 165, 89, 0.1);
             border: 2px solid #23a559;
         }
         .offline {
-            color: #da373c; /* 빨간색 */
+            color: #da373c; 
             background-color: rgba(218, 55, 60, 0.1);
             border: 2px solid #da373c;
         }
         .loading {
-            color: #f0b232; /* 노란색 */
+            color: #f0b232; 
             background-color: rgba(240, 178, 50, 0.1);
             border: 2px solid #f0b232;
         }
         #player-count {
             font-size: 1.1rem;
             color: #b5bac1;
+            margin-bottom: 20px;
+        }
+        .ip-info {
+            display: none;
+            background-color: #1e1f22;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: left;
+            font-size: 0.95rem;
+            color: #b5bac1;
+            line-height: 1.6;
+        }
+        .ip-info span {
+            color: #f2f3f5;
+            font-weight: bold;
+            user-select: all;
+            cursor: pointer;
+        }
+        
+        /* 3명씩 정렬되는 플레이어 목록 그리드(Grid) 디자인 */
+        .player-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 정확히 3칸으로 나눔 */
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .player-card {
+            background-color: #1e1f22;
+            padding: 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden; /* 글자가 길면 숨김 처리 */
+        }
+        .player-card img {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .player-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #dbdee1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; /* 글자가 박스를 넘어가면 ... 으로 표시 */
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>마크 서버 체크기</h1>
+        <h1>떡잎마을 서버 체크</h1>
         <div id="status-box" class="loading">상태 확인 중...</div>
         <p id="player-count">서버에 연결하고 있습니다.</p>
+
+        <div id="ip-box" class="ip-info">
+            💻 자바: <span>122.44.112.18:25565</span><br>
+            📱 베드락: <span>122.44.112.18:19132</span>
+        </div>
+
+        <div id="player-list" class="player-list"></div>
     </div>
 
     <script>
         async function checkStatus() {
             const statusBox = document.getElementById('status-box');
             const playerCount = document.getElementById('player-count');
+            const ipBox = document.getElementById('ip-box');
+            const playerListDiv = document.getElementById('player-list');
 
             try {
                 const response = await fetch('/api/status');
@@ -78,21 +137,40 @@
                     statusBox.textContent = "서버가 열렸습니다";
                     statusBox.className = "online";
                     playerCount.textContent = `현재 접속자: ${data.players}명 / ${data.maxPlayers}명`;
+                    ipBox.style.display = 'block'; 
+
+                    playerListDiv.innerHTML = ''; 
+                    if (data.playerList && data.playerList.length > 0) {
+                        data.playerList.forEach(player => {
+                            const card = document.createElement('div');
+                            card.className = 'player-card';
+                            card.innerHTML = `
+                                <img src="https://minotar.net/helm/${player.name}/32.png" alt="${player.name}">
+                                <span class="player-name" title="${player.name}">${player.name}</span>
+                            `;
+                            playerListDiv.appendChild(card);
+                        });
+                    } else if (data.players > 0) {
+                        playerListDiv.innerHTML = '<span style="grid-column: span 3; font-size: 0.85rem; color: #80848e;">서버 설정으로 인해 접속자 명단을 숨겼습니다.</span>';
+                    }
+
                 } else {
                     statusBox.textContent = "서버가 닫혀있습니다";
                     statusBox.className = "offline";
                     playerCount.textContent = "서버가 오프라인 상태입니다.";
+                    ipBox.style.display = 'none'; 
+                    playerListDiv.innerHTML = ''; 
                 }
             } catch (error) {
                 statusBox.textContent = "오류 발생";
                 statusBox.className = "offline";
                 playerCount.textContent = "서버 상태를 불러올 수 없습니다.";
+                ipBox.style.display = 'none';
+                playerListDiv.innerHTML = '';
             }
         }
 
-        // 페이지 열자마자 바로 확인
         checkStatus();
-        // 그 후 10초마다 계속 새로고침 없이 자동 확인
         setInterval(checkStatus, 10000);
     </script>
 </body>
